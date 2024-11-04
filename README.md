@@ -1,4 +1,4 @@
-<h1>Projeto 1 de Sistemas Distribuídos</h1>
+<h1>Projeto 2 de Sistemas Distribuídos</h1>
 
 ### Membros do Grupo
 
@@ -7,79 +7,106 @@
 - Eduardo Alvares Cipriano            - 12011BCC049
 - Natan Gonçalves de Lyra             - 12111BCC006
 
-### Requisitos Básicos
+### Requisitos Mínimos
 
-- Implementar os casos de uso usando tabelas hash locais aos servidores, em memória (hash tables, dicionários, mapas, etc).
-- Documentar o esquema de dados usados nas tabelas e escolhas para cada JSON.
-- Suportar a execução de múltiplos clientes e servidores.
-- Implementar os clientes e servidores com interface de linha de comando para execução.
-- Certificar-se de que todas as APIs possam retornar erros/exceções e que estas são tratadas, explicando sua decisão de tratamento dos erros.
-- Implementar a propagação de informação entre as diversas caches do sistema usando necessariamente pub-sub, já que a comunicação é de 1 para muitos.
-- Utilizar o broker pub-sub mosquitto com a configuração padrão e aceitando conexões na interface local (localhost ou 127.0.0.1), porta TCP 1883.
-- Gravar um vídeo de no máximo 5 minutos demonstrando que os requisitos foram atendidos.
+- Arquivo README.md com instruções de compilação, inicialização e uso de clientes e servidores.
 
-### Documentação do esquema de dados
+- Arquivo compile.sh para baixar/instalar dependências, compilar e gerar binários.
 
-Para usuários escolhemos estruturar o JSON da seguinte forma:
+- Arquivo cad-server.sh para executar o servidor do Portal Cadastro, recebendo como parâmetro ao menos a porta em que o servidor deve aguardar conexões.
+
+- Arquivo cad-client.sh para executar o cliente interativo do Portal Cadastro, recebendo como parâmetro ao menos a porta do servidor que deve se conectar.
+
+- Arquivo bib-server.sh para executar o servidor do Portal Biblioteca, recebendo como parâmetro ao menos a porta em que o servidor deve aguardar conexões.
+
+- Arquivo bib-client.sh para executar o cliente interativo do Portal Biblioteca, recebendo como parâmetro ao menos a porta do servidor que deve se conectar.
+
+- Descrição das dificuldades com indicação do que não foi implementado.
+
+- Arquivo replica.sh para executar cada réplica do serviço de persistência, recebendo como parâmetro o id da réplica (0, 1 ou 2) e o número do cluster a que ela pertence (0 ou 1).
+
+## Mudanças na implementação 
+
+### Execução de Réplicas
+
+O script `replica.sh` é responsável por criar réplicas para dois clusters: o Cluster de Usuários e o Cluster de Livros. Abaixo, você encontrará as instruções para utilizá-lo.
+
+### Parâmetros de Execução
+
+O script deve ser executado com três parâmetros:
+
+1. **Porta gRPC**: A porta que o serviço gRPC irá utilizar.
+2. **ID da réplica do Cluster de Usuários**: Um número que identifica qual réplica do cluster de usuários será criada.
+3. **ID da réplica do Cluster de Livros**: Um número que identifica qual réplica do cluster de livros será criada.
+
+### Exemplos de Uso
+
+A seguir está um exemplo de como utilizar o script para criar réplicas:
 
 ```bash
-dados = {
-        "cpf": cpf,
-        "nome": nome
-    }
+./replica.sh <porta_database_service> <id_replica_cluster_1> <id_replica_cluster_2>
 ```
 
-Para livros escolhemos estruturar o JSON da seguinte forma:
+Por exemplo, para criar a primeira réplica para ambos os clusters, você pode usar:
 
 ```bash
-dados = {
-        "isbn": isbn,
-        "titulo": titulo,
-        "autor": autor,
-        "total": total
-    }
+./replica.sh 1234 0 0
 ```
 
-Para salvar os empréstimos realizados pelos usuários, decidimos estruturar um dicionário de <I>usuarioLivros</I> que salva a hora do empréstimo (para verificações futuras de Bloquear Usuário):
+Essa execução criará:
+
+- Uma réplica com `id` 0 no Cluster de Usuários, escutando na porta 3333.
+- Uma réplica com `id` 0 no Cluster de Livros, escutando na porta 6666.
+
+### Criação de Múltiplas Réplicas
+
+Para criar três réplicas em cada cluster, você deve executar o script três vezes, variando os IDs:
 
 ```bash
-usuariosLivros[cpf] = { 'livros': [{'isbn': livro.isbn, 'dataEmprestimo': datetime.now()}]}
+./replica.sh 1234 0 0
+./replica.sh 5678 1 1
+./replica.sh 1579 2 2
 ```
 
-### Instruções de Compilação
+Isso criará as seguintes réplicas:
+
+- Cluster de Usuários:
+    - ID 0: porta 3333
+    - ID 1: porta 4444
+    - ID 2: porta 5555
+- Cluster de Livros:
+    - ID 0: porta 6666
+    - ID 1: porta 7777
+    - ID 2: porta 8888
+
+## Instruções de Compilação
 
 Primeiramente faça o <I>git clone</I> do nosso repositório.
 
 ```bash
-git clone https://github.com/NatanGLyra/Projeto01-SD.git
+git clone https://github.com/christhian12rv/SD-Parte-2.git
 ```
 
 Logo em seguida instale todas as depêndencias necessárias para a execução do projeto:
 
 ```bash
-cd Trabalho
+cd SD-PARTE-2
 chmod +x compile.sh
 ./compile.sh
 ```
 
-### Abertura dos Servidores e Clientes
+## Abertura dos Servidores e Clientes
 
-Antes de propriamente abrir os Servidores e clientes, deixe o mosquitto rodando em um terminal separado:
+Para cada Servidor Administrativo execute essa linha substituido <I><B><PORTA_DESEJADA></B></I> <I><B><PORTA_DATABASE_SERVICE></B></I>  com a porta para aquele servidor e a porta do serviço de banco de dados: 
 
 ```bash
-mosquitto
+./cad-server.sh <PORTA_DESEJADA> <PORTA_DATABASE_SERVICE>
 ```
 
-Para cada Servidor Administrativo execute essa linha substituido <I><B><PORTA_DESEJADA></B></I> com a porta para aquele servidor:
+Para cada Servidor Biblioteca execute essa linha substituido <I><B><PORTA_DESEJADA></B></I> <I><B><PORTA_DATABASE_SERVICE></B></I>  com a porta para aquele servidor e a porta do serviço de banco de dados:
 
-```bash
-./cad-server.sh <PORTA_DESEJADA>
-```
-
-Para cada Servidor Biblioteca execute essa linha substituido <I><B><PORTA_DESEJADA></B></I> com a porta para aquele servidor:
-
-```bash
-./bib-server.sh <PORTA_DESEJADA>
+```bash 
+./bib-server.sh <PORTA_DESEJADA> <PORTA_DATABASE_SERVICE>
 ```
 
 Para cada Cliente Administrativo execute essa linha substituido <I><B><PORTA_DESEJADA></B></I> com a porta igual a de um servidor previamente inicializado:
@@ -94,12 +121,20 @@ Para cada Cliente Biblioteca execute essa linha substituido <I><B><PORTA_DESEJAD
 ./bib-client.sh <PORTA_DESEJADA>
 ```
 
-### Utilização dos Clientes e Servidores
+## Utilização dos Clientes e Servidores
 
 <B>Servidores</B>: Após executar as linhas de comando que inicializam os servidores, basta deixar o terminal aberto para que o servidor continue a funcionar.
 
 <B>Clientes</B>: Após executar as linhas de comando que inicializam os clientes, basta selecionar uma operação apartir do menu impresso no terminal, onde a leitura será realizada a partir do teclado.
 
-### Vídeo
+<B>Réplicas</B>: Após executar as linhas de comando que inicializam as réplicas, basta deixar os terminais abertos para que o serviço de banco de dados continue a funcionar.
 
-<B>Link:</B> [Vídeo de Apresentação dos Requisitos](https://ufubr-my.sharepoint.com/:v:/g/personal/chrystopherpol_ufu_br/EUt-gjyTNIFOnMZUseIzo78B6p8Ag_C0zJ0mGAfZg5Ateg)
+## Exemplo de Execução
+
+<b>OBS</b>: 
+- Os três primeiros terminais são instâncias de réplicas de cada cluster. 
+- O quarto terminal é uma instância de um servidor administrativo conectado a porta 9876 (primeiro terminal). 
+- O quinto terminal é uma instância de cliente administrativo conectado a porta 7778 (quarto terminal). 
+- O funcionamento do servidor e cliente de biblioteca são iguais. 
+
+![EXEMPLO DE EXECUCAO](img/image.png)
