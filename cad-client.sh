@@ -1,0 +1,1 @@
+python3 PortalAdministrativoCliente.py $1

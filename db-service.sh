@@ -1,0 +1,1 @@
+python3 DatabaseService.py $1 $2 $3
